@@ -2,112 +2,158 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="css/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - Ecommerce App</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f7f7f7;
+    }
+    #login, #admin-panel {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #products, #orders {
+      margin-top: 30px;
+    }
+    .product, .order {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
 </head>
 <body>
-  <div id="adminApp">
-    <h1>Admin Panel - Product Management</h1>
 
-    <form @submit.prevent="saveProduct">
-      <input v-model="form.id" type="text" placeholder="ID" required />
-      <input v-model="form.name" type="text" placeholder="Product Name" required />
-      <input v-model.number="form.price" type="number" placeholder="Price" required />
-      <input v-model="form.image" type="text" placeholder="Image URL" required />
-      <textarea v-model="form.description" placeholder="Product Description" required></textarea>
-      <button type="submit">{{ form.id && isEditing ? 'Update' : 'Add' }} Product</button>
-      <button type="button" v-if="isEditing" @click="cancelEdit">Cancel</button>
-    </form>
+  <!-- LOGIN SCREEN -->
+  <div id="login">
+    <h2>Admin Login</h2>
+    <input type="password" id="password" placeholder="Enter admin password" />
+    <button onclick="checkPassword()">Login</button>
+    <p id="error" style="color:red;"></p>
+  </div>
 
-    <hr />
+  <!-- ADMIN PANEL -->
+  <div id="admin-panel" style="display:none;">
+    <h2>Welcome to Admin Panel</h2>
 
-    <h2>Existing Products</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th><th>Name</th><th>Price</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(product, index) in products" :key="product.id">
-          <td>{{ product.id }}</td>
-          <td>{{ product.name }}</td>
-          <td>${{ product.price }}</td>
-          <td>
-            <button @click="editProduct(index)">Edit</button>
-            <button @click="deleteProduct(index)">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Add Product Form -->
+    <div id="add-product">
+      <h3>Add Product</h3>
+      <input type="text" id="product-name" placeholder="Product Name">
+      <input type="number" id="product-price" placeholder="Price">
+      <input type="text" id="product-image" placeholder="Image URL">
+      <textarea id="product-description" placeholder="Description"></textarea>
+      <button onclick="addProduct()">Add Product</button>
+    </div>
 
-    <button @click="exportJSON">Download products.json</button>
+    <!-- Product List -->
+    <div id="products">
+      <h3>Product List</h3>
+      <div id="product-list"></div>
+    </div>
+
+    <!-- Orders List -->
+    <div id="orders">
+      <h3>Customer Orders</h3>
+      <div id="order-list"></div>
+    </div>
   </div>
 
   <script>
-    new Vue({
-      el: "#adminApp",
-      data: {
-        products: [],
-        form: {
-          id: "",
-          name: "",
-          price: null,
-          image: "",
-          description: ""
-        },
-        isEditing: false,
-        editIndex: null
-      },
-      created() {
-        fetch("data/products.json")
-          .then(res => res.json())
-          .then(data => {
-            this.products = data;
-          });
-      },
-      methods: {
-        saveProduct() {
-          if (this.isEditing) {
-            this.products[this.editIndex] = { ...this.form };
-          } else {
-            this.products.push({ ...this.form });
-          }
-          this.resetForm();
-        },
-        editProduct(index) {
-          this.form = { ...this.products[index] };
-          this.isEditing = true;
-          this.editIndex = index;
-        },
-        deleteProduct(index) {
-          if (confirm("Delete this product?")) {
-            this.products.splice(index, 1);
-          }
-        },
-        cancelEdit() {
-          this.resetForm();
-        },
-        resetForm() {
-          this.form = { id: "", name: "", price: null, image: "", description: "" };
-          this.isEditing = false;
-          this.editIndex = null;
-        },
-        exportJSON() {
-          const blob = new Blob([JSON.stringify(this.products, null, 2)], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "products.json";
-          a.click();
-          URL.revokeObjectURL(url);
-        }
+    const correctPassword = "MajestyAdmin2024"; // Change this password
+
+    function checkPassword() {
+      const input = document.getElementById("password").value;
+      if (input === correctPassword) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("admin-panel").style.display = "block";
+        loadProducts();
+        loadOrders();
+      } else {
+        document.getElementById("error").textContent = "Incorrect password.";
       }
-    });
+    }
+
+    function addProduct() {
+      const name = document.getElementById("product-name").value;
+      const price = document.getElementById("product-price").value;
+      const image = document.getElementById("product-image").value;
+      const desc = document.getElementById("product-description").value;
+
+      const product = { name, price, image, desc };
+
+      let products = JSON.parse(localStorage.getItem("products")) || [];
+      products.push(product);
+      localStorage.setItem("products", JSON.stringify(products));
+      alert("Product added!");
+      loadProducts();
+    }
+
+    function loadProducts() {
+      const container = document.getElementById("product-list");
+      const products = JSON.parse(localStorage.getItem("products")) || [];
+      container.innerHTML = "";
+      products.forEach((p, i) => {
+        container.innerHTML += `
+          <div class="product">
+            <strong>${p.name}</strong><br>
+            $${p.price}<br>
+            <img src="${p.image}" width="100"/><br>
+            <small>${p.desc}</small><br>
+            <button onclick="deleteProduct(${i})">Delete</button>
+          </div>
+        `;
+      });
+    }
+
+    function deleteProduct(index) {
+      let products = JSON.parse(localStorage.getItem("products")) || [];
+      products.splice(index, 1);
+      localStorage.setItem("products", JSON.stringify(products));
+      loadProducts();
+    }
+
+    function loadOrders() {
+      const orders = JSON.parse(localStorage.getItem("orders")) || [];
+      const container = document.getElementById("order-list");
+      container.innerHTML = "";
+      orders.forEach((order, i) => {
+        container.innerHTML += `
+          <div class="order">
+            <strong>${order.name}</strong><br>
+            Email: ${order.email}<br>
+            Address: ${order.address}<br>
+            <small>${JSON.stringify(order.cart)}</small>
+          </div>
+        `;
+      });
+    }
   </script>
 </body>
 </html>
-<!-- This is the admin panel for managing products in the shop. -->
-<!-- It allows adding, editing, and deleting products, as well as exporting the product list to a JSON file. -->
