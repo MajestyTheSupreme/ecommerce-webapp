@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+  <div id="app">
+    <h1>Shopping Cart</h1>
+
+    <div v-if="cart.length">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in cart" :key="item.id">
+            <td>{{ item.name }}</td>
+            <td>${{ item.price }}</td>
+            <td>
+              <input type="number" v-model.number="item.quantity" @input="updateCart" min="1" />
+            </td>
+            <td>${{ (item.price * item.quantity).toFixed(2) }}</td>
+            <td><button @click="removeItem(index)">Remove</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Total: ${{ total }}</strong></p>
+      <a href="checkout.html"><button>Go to Checkout</button></a>
+    </div>
+
+    <div v-else>
+      <p>Your cart is empty.</p>
+      <a href="index.html"><button>Shop Now</button></a>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: "#app",
+      data: {
+        cart: JSON.parse(localStorage.getItem("cart")) || []
+      },
+      computed: {
+        total() {
+          return this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+        }
+      },
+      methods: {
+        updateCart() {
+          localStorage.setItem("cart", JSON.stringify(this.cart));
+        },
+        removeItem(index) {
+          this.cart.splice(index, 1);
+          this.updateCart();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+<!-- This is the cart.html file for a simple shopping cart application. It uses Vue.js to manage the cart state and localStorage to persist the cart data. -->
+<!-- Users can view their cart items, update quantities, remove items, and proceed to checkout. -->

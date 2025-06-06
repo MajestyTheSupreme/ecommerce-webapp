@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Details</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+  <div id="app">
+    <div v-if="product">
+      <h1>{{ product.name }}</h1>
+      <img :src="product.image" />
+      <p>${{ product.price }}</p>
+      <p>{{ product.description || 'No description available.' }}</p>
+      <button @click="addToCart(product)">Add to Cart</button>
+    </div>
+    <div v-else>
+      <p>Loading product...</p>
+    </div>
+  </div>
+
+  <script src="js/product.js"></script>
+</body>
+</html>

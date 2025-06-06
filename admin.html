@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+  <div id="adminApp">
+    <h1>Admin Panel - Product Management</h1>
+
+    <form @submit.prevent="saveProduct">
+      <input v-model="form.id" type="text" placeholder="ID" required />
+      <input v-model="form.name" type="text" placeholder="Product Name" required />
+      <input v-model.number="form.price" type="number" placeholder="Price" required />
+      <input v-model="form.image" type="text" placeholder="Image URL" required />
+      <textarea v-model="form.description" placeholder="Product Description" required></textarea>
+      <button type="submit">{{ form.id && isEditing ? 'Update' : 'Add' }} Product</button>
+      <button type="button" v-if="isEditing" @click="cancelEdit">Cancel</button>
+    </form>
+
+    <hr />
+
+    <h2>Existing Products</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Price</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(product, index) in products" :key="product.id">
+          <td>{{ product.id }}</td>
+          <td>{{ product.name }}</td>
+          <td>${{ product.price }}</td>
+          <td>
+            <button @click="editProduct(index)">Edit</button>
+            <button @click="deleteProduct(index)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button @click="exportJSON">Download products.json</button>
+  </div>
+
+  <script>
+    new Vue({
+      el: "#adminApp",
+      data: {
+        products: [],
+        form: {
+          id: "",
+          name: "",
+          price: null,
+          image: "",
+          description: ""
+        },
+        isEditing: false,
+        editIndex: null
+      },
+      created() {
+        fetch("data/products.json")
+          .then(res => res.json())
+          .then(data => {
+            this.products = data;
+          });
+      },
+      methods: {
+        saveProduct() {
+          if (this.isEditing) {
+            this.products[this.editIndex] = { ...this.form };
+          } else {
+            this.products.push({ ...this.form });
+          }
+          this.resetForm();
+        },
+        editProduct(index) {
+          this.form = { ...this.products[index] };
+          this.isEditing = true;
+          this.editIndex = index;
+        },
+        deleteProduct(index) {
+          if (confirm("Delete this product?")) {
+            this.products.splice(index, 1);
+          }
+        },
+        cancelEdit() {
+          this.resetForm();
+        },
+        resetForm() {
+          this.form = { id: "", name: "", price: null, image: "", description: "" };
+          this.isEditing = false;
+          this.editIndex = null;
+        },
+        exportJSON() {
+          const blob = new Blob([JSON.stringify(this.products, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "products.json";
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+<!-- This is the admin panel for managing products in the shop. -->
+<!-- It allows adding, editing, and deleting products, as well as exporting the product list to a JSON file. -->

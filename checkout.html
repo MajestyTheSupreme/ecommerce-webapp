@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+<body>
+  <div id="app">
+    <h1>Checkout</h1>
+
+    <div v-if="cart.length">
+      <ul>
+        <li v-for="item in cart">
+          {{ item.name }} - Qty: {{ item.quantity }} - ${{ (item.price * item.quantity).toFixed(2) }}
+        </li>
+      </ul>
+
+      <p><strong>Total: ${{ total }}</strong></p>
+
+      <form @submit.prevent="placeOrder">
+        <input type="text" v-model="name" placeholder="Your Name" required /><br />
+        <input type="text" v-model="address" placeholder="Shipping Address" required /><br />
+        <button type="submit">Place Order</button>
+      </form>
+    </div>
+
+    <div v-else>
+      <p>Your cart is empty.</p>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: "#app",
+      data: {
+        cart: JSON.parse(localStorage.getItem("cart")) || [],
+        name: "",
+        address: ""
+      },
+      computed: {
+        total() {
+          return this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+        }
+      },
+      methods: {
+        placeOrder() {
+          alert(`Order placed!\nName: ${this.name}\nAddress: ${this.address}\nTotal: $${this.total}`);
+          localStorage.removeItem("cart");
+          this.cart = [];
+          this.name = "";
+          this.address = "";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+<!-- This is the checkout page where users can review their cart and place an order. -->
+<!-- It uses Vue.js to manage the cart state and handle the order placement. -->

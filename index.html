@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simple Shop</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script> <!-- Vue.js via CDN -->
+</head>
+<body>
+  <div id="app">
+
+    <!-- 🛒 Cart link -->
+    <div class="cart">
+      <a href="cart.html">🛒 Cart ({{ cart.length }})</a>
+    </div>
+    <!-- 🛒 Cart link end -->
+
+    <!-- 🛍 Store Header -->
+    <h1>Welcome to our shop!</h1>
+
+    <!-- Search input -->
+    <input type="text" v-model="search" placeholder="Search products..." />
+    <!-- Search input end -->
+
+    <!-- Product list -->
+    <div class="product-list">
+      <div class="product" v-for="product in filteredProducts" :key="product.id">
+        <img :src="product.image" :alt="product.name" />
+        <h2>{{ product.name }}</h2>
+        <p>${{ product.price }}</p>
+        <button @click="addToCart(product)">Add to Cart</button>
+        <a :href="'product.html?id=' + product.id"><button>View Details</button></a><!-- Link to product details page -->
+      </div>
+    </div>
+    <!-- Product list end -->
+  </div>
+
+  <!-- 📜 Vue Component Logic -->
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Red T-shirt",
+    "price": 19.99,
+    "image": "https://via.placeholder.com/150"
+  },
+  {
+    "id": 2,
+    "name": "Blue Hoodie",
+    "price": 39.99,
+    "image": "https://via.placeholder.com/150"
+  }
+]
