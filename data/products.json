@@ -3,12 +3,36 @@
     "id": 1,
     "name": "Red T-shirt",
     "price": 19.99,
-    "image": "https://via.placeholder.com/150"
+    "image": "https://via.placeholder.com/150",
+    "category": "Clothing",
+    "stock": 10,
+    "description": "Comfortable red T-shirt made from 100% cotton."
   },
   {
     "id": 2,
     "name": "Blue Hoodie",
     "price": 39.99,
-    "image": "https://via.placeholder.com/150"
+    "image": "https://via.placeholder.com/150",
+    "category": "Clothing",
+    "stock": 0,
+    "description": "Warm and cozy blue hoodie for chilly days."
+  },
+  {
+    "id": 3,
+    "name": "Bluetooth Speaker",
+    "price": 59.99,
+    "image": "https://via.placeholder.com/150",
+    "category": "Electronics",
+    "stock": 5,
+    "description": "Portable Bluetooth speaker with excellent sound quality."
+  },
+  {
+    "id": 4,
+    "name": "Running Shoes",
+    "price": 79.99,
+    "image": "https://via.placeholder.com/150",
+    "category": "Footwear",
+    "stock": 3,
+    "description": "Lightweight running shoes designed for performance."
   }
 ]

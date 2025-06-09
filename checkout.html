@@ -1,33 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Checkout</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 </head>
-<body>
-  <div id="app">
-    <h1>Checkout</h1>
+<body class="min-h-screen flex items-center justify-center py-10 px-4 relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-tr from-indigo-200 via-white to-purple-200 dark:from-gray-800 dark:via-gray-900 dark:to-black opacity-20 z-0"></div>
 
-    <div v-if="cart.length">
-      <ul>
-        <li v-for="item in cart">
-          {{ item.name }} - Qty: {{ item.quantity }} - ${{ (item.price * item.quantity).toFixed(2) }}
+  <div id="app" class="relative z-10 w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+    <h1 class="text-3xl font-bold text-center">Checkout</h1>
+
+    <div v-if="cart.length" class="space-y-4">
+      <ul class="divide-y divide-gray-300 dark:divide-gray-600">
+        <li v-for="item in cart" :key="item.id" class="py-2">
+          <span class="font-semibold">{{ item.name }}</span> — Qty: {{ item.quantity }} — 
+          <span class="text-green-600 dark:text-green-400">${{ (item.price * item.quantity).toFixed(2) }}</span>
         </li>
       </ul>
 
-      <p><strong>Total: ${{ total }}</strong></p>
+      <p class="text-xl font-bold text-center">Total: ${{ total }}</p>
 
-      <form @submit.prevent="placeOrder">
-        <input type="text" v-model="name" placeholder="Your Name" required /><br />
-        <input type="text" v-model="address" placeholder="Shipping Address" required /><br />
-        <button type="submit">Place Order</button>
+      <form @submit.prevent="placeOrder" class="space-y-4">
+        <input v-model="name" type="text" placeholder="Your Name" required
+               class="input" />
+        <input v-model="address" type="text" placeholder="Shipping Address" required
+               class="input" />
+        <button type="submit" class="btn-primary w-full">Place Order</button>
       </form>
     </div>
 
-    <div v-else>
+    <div v-else class="text-center">
       <p>Your cart is empty.</p>
     </div>
   </div>
@@ -56,7 +61,14 @@
       }
     });
   </script>
+
+  <style>
+    .input {
+      @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white;
+    }
+    .btn-primary {
+      @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
+    }
+  </style>
 </body>
 </html>
-<!-- This is the checkout page where users can review their cart and place an order. -->
-<!-- It uses Vue.js to manage the cart state and handle the order placement. -->
