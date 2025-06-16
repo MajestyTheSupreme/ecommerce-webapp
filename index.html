@@ -19,99 +19,121 @@
       }
     };
   </script>
+  <style>
+    .fade-enter-active, .fade-leave-active {
+      transition: opacity 0.7s ease;
+    }
+    .fade-enter, .fade-leave-to {
+      opacity: 0;
+    }
+    
+.modal-enter-active, .modal-leave-active {
+  transition: all 1s ease;
+}
+.modal-enter, .modal-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+  </style>
 </head>
+
 <body class="bg-darkBg text-white dark:bg-white dark:text-black">
   <div id="app">
-    <!-- 🌐 Top Navigation Bar -->
-    <nav class="flex justify-between items-center p-4 bg-cardBg text-white dark:bg-gray-100 dark:text-black shadow-md">
-      <div class="text-xl font-bold">🛒 SimpleShop</div>
-      <div class="flex space-x-4 items-center">
-        <button class="sm:hidden" @click="navOpen = !navOpen">☰</button>
-        <button @click="darkMode = !darkMode" class="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white dark:bg-gray-300 dark:text-black rounded">
-          {{ darkMode ? '☀️ Light' : '🌙 Dark' }}
-        </button>
-      </div>
-      <ul :class="{ 'flex flex-col sm:flex-row gap-4': true, 'hidden': !navOpen && window.innerWidth < 640 }" class="mt-4 sm:mt-0">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="#product-section">Products</a></li>
-        <li><a href="cart.html">Cart ({{ cart.length }})</a></li>
-        <li><a href="admin.html">Admin</a></li>
-        <li><a href="cart.html">🛒 <span>{{ cartItemCount }}</span></a></li>
-      </ul>
-    </nav>
+    <transition name="fade">
+      <div v-if="pageVisible">
+        <!-- 🌐 Top Navigation Bar -->
+        <nav class="flex justify-between items-center p-4 bg-cardBg text-white dark:bg-gray-100 dark:text-black shadow-md">
+          <div class="text-xl font-bold">Trekist <span style="color: red;">Footwear</span></div>
+          <div class="flex space-x-4 items-center">
+            <button class="sm:hidden" @click="navOpen = !navOpen">☰</button>
+            <button @click="darkMode = !darkMode" class="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white dark:bg-gray-300 dark:text-black rounded">
+              {{ darkMode ? '☀️ Light' : '🌙 Dark' }}
+            </button>
+          </div>
+          <ul :class="{ 'flex flex-col sm:flex-row gap-4': true, 'hidden': !navOpen && window.innerWidth < 640 }" class="mt-4 sm:mt-0">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#product-section">Products</a></li>
+            <li><a href="cart.html">Cart ({{ cart.length }})</a></li>
+            <li><a href="admin.html">Admin</a></li>
+            <li><a href="cart.html">🛒 <span>{{ cartItemCount }}</span></a></li>
+          </ul>
+        </nav>
 
-    <!-- 🛍 Store Header -->
-    <div class="text-center py-6">
-      <h1 class="text-3xl font-semibold">Welcome to our shop!</h1>
+        <!-- 🛍 Store Header -->
+        <div class="text-center py-6">
+          <h1 class="text-3xl font-semibold">Welcome to our shop!</h1>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
+          <select v-model="selectedCategory" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black">
+            <option value="">All Categories</option>
+            <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+          </select>
+
+          <input type="text" v-model="search" placeholder="Search products..." class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black" />
+          <input type="number" v-model.number="minPrice" placeholder="Min Price" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black" />
+          <input type="number" v-model.number="maxPrice" placeholder="Max Price" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black" />
+
+          <select v-model="sortOption" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black">
+            <option value="">Default</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A-Z</option>
+            <option value="name-desc">Name: Z-A</option>
+          </select>
+        </div>
+
+        <!-- Product list -->
+        <div id="product-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+          <div class="bg-cardBg text-white dark:bg-gray-100 dark:text-black p-4 rounded shadow" v-for="product in filteredProducts" :key="product.id">
+            <div @click="selectedProduct = product" class="cursor-pointer">
+              <img :src="product.image" :alt="product.name" class="w-full h-48 object-cover rounded mb-2" />
+              <h2 class="text-lg font-bold">{{ product.name }}</h2>
+              <p class="text-sm">${{ product.price }}</p>
+              <p class="text-sm" :class="{ 'text-red-500': product.stock === 0 }">
+                {{ product.stock === 0 ? 'Out of Stock' : 'In Stock: ' + product.stock }}
+              </p>
+            </div>
+
+            <button
+              :disabled="product.stock === 0"
+              @click.stop.prevent="addToCart(product)"
+              class="mt-2 w-full py-2 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-300 dark:text-black disabled:opacity-50"
+            >
+              {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
+            </button>
+          </div>
+        </div>
+
+      <!-- 🪟 Product Modal -->
+<transition name="modal">
+  <div v-if="selectedProduct" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+    <div class="bg-cardBg text-white dark:bg-white dark:text-black p-6 rounded-lg max-w-md w-full relative transform transition-all duration-300">
+      <!-- Close Button -->
+      <button @click="selectedProduct = null" class="absolute top-2 right-2 text-white dark:text-black text-xl font-bold">&times;</button>
+
+      <!-- Product Info -->
+      <img :src="selectedProduct.image" class="w-full h-48 object-cover rounded mb-4" />
+      <h2 class="text-2xl font-semibold mb-2">{{ selectedProduct.name }}</h2>
+      <p class="mb-2">{{ selectedProduct.description || 'No description available.' }}</p>
+      <p class="font-bold mb-2">Price: ${{ selectedProduct.price }}</p>
+      <p class="mb-2" :class="{ 'text-red-500': selectedProduct.stock === 0 }">
+        {{ selectedProduct.stock === 0 ? 'Out of Stock' : 'In Stock: ' + selectedProduct.stock }}
+      </p>
+
+      <button
+        @click="addToCart(selectedProduct)"
+        :disabled="selectedProduct.stock === 0"
+        class="mt-2 w-full py-2 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-300 dark:text-black disabled:opacity-50"
+      >
+        {{ selectedProduct.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
+      </button>
     </div>
-
-    <!-- Filters -->
-    <div class="flex flex-wrap justify-center gap-4 mb-6">
-      <select v-model="selectedCategory" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black">
-        <option value="">All Categories</option>
-        <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-      </select>
-
-      <input type="text" v-model="search" placeholder="Search products..." class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black" />
-
-      <input type="number" v-model.number="minPrice" placeholder="Min Price" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black" />
-      <input type="number" v-model.number="maxPrice" placeholder="Max Price" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black" />
-
-      <select v-model="sortOption" class="p-2 rounded bg-cardBg text-white dark:bg-gray-100 dark:text-black">
-        <option value="">Default</option>
-        <option value="price-asc">Price: Low to High</option>
-        <option value="price-desc">Price: High to Low</option>
-        <option value="name-asc">Name: A-Z</option>
-        <option value="name-desc">Name: Z-A</option>
-      </select>
-    </div>
-
-    <!-- Product list -->
-    <div id="product-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
-      <div class="bg-cardBg text-white dark:bg-gray-100 dark:text-black p-4 rounded shadow" v-for="product in filteredProducts" :key="product.id">
-        <div @click="selectedProduct = product" class="cursor-pointer">
-  <img :src="product.image" :alt="product.name" class="w-full h-48 object-cover rounded mb-2" />
-  <h2 class="text-lg font-bold">{{ product.name }}</h2>
-  <p class="text-sm">${{ product.price }}</p>
-  <p class="text-sm" :class="{ 'text-red-500': product.stock === 0 }">
-    {{ product.stock === 0 ? 'Out of Stock' : 'In Stock: ' + product.stock }}
-  </p>
-</div>
-
-        <button
-          :disabled="product.stock === 0"
-          @click.stop.prevent="addToCart(product)"
-          class="mt-2 w-full py-2 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-300 dark:text-black disabled:opacity-50"
-        >
-          {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- 🪟 Product Modal -->
-<div v-if="selectedProduct" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-  <div class="bg-cardBg text-white dark:bg-white dark:text-black p-6 rounded-lg max-w-md w-full relative">
-    <!-- Close Button -->
-    <button @click="selectedProduct = null" class="absolute top-2 right-2 text-white dark:text-black text-xl font-bold">&times;</button>
-
-    <!-- Product Info -->
-    <img :src="selectedProduct.image" class="w-full h-48 object-cover rounded mb-4" />
-    <h2 class="text-2xl font-semibold mb-2">{{ selectedProduct.name }}</h2>
-    <p class="mb-2">{{ selectedProduct.description || 'No description available.' }}</p>
-    <p class="font-bold mb-2">Price: ${{ selectedProduct.price }}</p>
-    <p class="mb-2" :class="{ 'text-red-500': selectedProduct.stock === 0 }">
-      {{ selectedProduct.stock === 0 ? 'Out of Stock' : 'In Stock: ' + selectedProduct.stock }}
-    </p>
-
-    <button
-      @click="addToCart(selectedProduct)"
-      :disabled="selectedProduct.stock === 0"
-      class="mt-2 w-full py-2 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-300 dark:text-black disabled:opacity-50"
-    >
-      {{ selectedProduct.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
-    </button>
   </div>
-</div>
+</transition>
+
+
 
   </div>
 

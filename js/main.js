@@ -14,13 +14,13 @@ new Vue({
     darkMode: JSON.parse(localStorage.getItem("darkMode")) || false,
     lastScrollY: 0,
     hideNav: false,
-    selectedProduct: null
+    selectedProduct: null,
+    pageVisible: false // ✅ NEW
   },
 
   computed: {
     filteredProducts() {
       const term = this.search.toLowerCase();
-
       let filtered = this.products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(term);
         const matchesCategory = this.selectedCategory === '' || product.category === this.selectedCategory;
@@ -29,7 +29,6 @@ new Vue({
         return matchesSearch && matchesCategory && matchesMin && matchesMax;
       });
 
-      // Sorting logic
       if (this.sortOption === 'price-asc') {
         filtered.sort((a, b) => a.price - b.price);
       } else if (this.sortOption === 'price-desc') {
@@ -49,18 +48,24 @@ new Vue({
   },
 
   created() {
+  const savedProducts = localStorage.getItem("products");
+  if (savedProducts) {
+    this.products = JSON.parse(savedProducts);
+  } else {
     fetch('data/products.json')
       .then(res => res.json())
       .then(data => {
         this.products = data;
         this.categories = [...new Set(data.map(p => p.category || 'Uncategorized'))];
+        localStorage.setItem("products", JSON.stringify(data)); // Cache it initially
       });
+  }
 
-    // Apply dark mode class initially
-    if (this.darkMode) {
-      document.documentElement.classList.add('dark');
-    }
-  },
+  if (this.darkMode) {
+    document.documentElement.classList.add('dark');
+  }
+}
+,
 
   mounted() {
     window.addEventListener("storage", () => {
@@ -69,6 +74,8 @@ new Vue({
 
     window.addEventListener("scroll", this.handleScroll);
     window.addEventListener("resize", this.handleScroll);
+
+    this.pageVisible = true; // ✅ Start transition
   },
 
   beforeDestroy() {
@@ -90,7 +97,6 @@ new Vue({
   methods: {
     addToCart(product) {
       if (product.stock === 0) return;
-
       const existing = this.cart.find(item => item.id === product.id);
       if (existing) {
         existing.quantity += 1;
@@ -124,7 +130,11 @@ new Vue({
       } else {
         this.hideNav = false;
       }
-    }
+    },
+    saveProducts() {
+      localStorage.setItem("products", JSON.stringify(this.products));
+}
+
+
   }
 });
-// Add event listener for product details modal

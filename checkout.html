@@ -6,69 +6,165 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 1s ease;
+  }
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
+
+  .input {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-400 bg-white dark:bg-gray-700 text-black !important;
+  color: black !important;
+}
+
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
+  }
+
+  @media print {
+      body * {
+        visibility: hidden;
+      }
+      #invoice, #invoice * {
+        visibility: visible;
+      }
+      #invoice {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        color: black;
+        padding: 20px;
+      }
+    }
+</style>
+
 </head>
 <body class="min-h-screen flex items-center justify-center py-10 px-4 relative overflow-hidden">
   <div class="absolute inset-0 bg-gradient-to-tr from-indigo-200 via-white to-purple-200 dark:from-gray-800 dark:via-gray-900 dark:to-black opacity-20 z-0"></div>
 
-  <div id="app" class="relative z-10 w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
-    <h1 class="text-3xl font-bold text-center">Checkout</h1>
+  <div id="app" class="relative z-10 w-full max-w-2xl">
+    <transition name="fade">
+      <div v-show="pageVisible" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-center">Checkout</h1>
 
-    <div v-if="cart.length" class="space-y-4">
-      <ul class="divide-y divide-gray-300 dark:divide-gray-600">
-        <li v-for="item in cart" :key="item.id" class="py-2">
-          <span class="font-semibold">{{ item.name }}</span> — Qty: {{ item.quantity }} — 
-          <span class="text-green-600 dark:text-green-400">${{ (item.price * item.quantity).toFixed(2) }}</span>
-        </li>
-      </ul>
+        <!-- Confirmation Message -->
+        <div v-if="orderPlaced" class="p-4 rounded-lg bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+          <h2 class="text-xl font-semibold mb-2">Thank you, {{ name }}!</h2>
+          <p>Your order has been placed successfully.</p>
+          <p><strong>Total:</strong> R{{ total }}</p>
+          <button @click="goHome" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Back to Shop</button>
+          <!-- Print Invoice Button -->
+          <button @click="printInvoice" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+          🧾 Print Invoice
+          </button>
+        </div>
 
-      <p class="text-xl font-bold text-center">Total: ${{ total }}</p>
+        <!-- Cart Items & Form -->
+        <div v-else-if="cart.length" class="space-y-4">
+          <ul class="divide-y divide-gray-300 dark:divide-gray-600">
+            <li v-for="item in cart" :key="item.id" class="py-2">
+              <span class="font-semibold">{{ item.name }}</span> — Qty: {{ item.quantity }} — 
+              <span class="text-green-600 dark:text-green-400">R{{ (item.price * item.quantity).toFixed(2) }}</span>
+            </li>
+          </ul>
 
-      <form @submit.prevent="placeOrder" class="space-y-4">
-        <input v-model="name" type="text" placeholder="Your Name" required
-               class="input" />
-        <input v-model="address" type="text" placeholder="Shipping Address" required
-               class="input" />
-        <button type="submit" class="btn-primary w-full">Place Order</button>
-      </form>
-    </div>
+          <p class="text-xl font-bold text-center">Total: R{{ total }}</p>
 
-    <div v-else class="text-center">
-      <p>Your cart is empty.</p>
-    </div>
+          <form @submit.prevent="placeOrder" class="space-y-4">
+            <input v-model="name" type="text" placeholder="Your Name" required class="input" />
+            <input v-model="address" type="text" placeholder="Shipping Address" required class="input" />
+            <button type="submit" class="btn-primary w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Place Order</button>
+          </form>
+        </div>
+
+        <!-- Empty Cart -->
+        <div v-else class="text-center text-lg space-y-4">
+          <p>Your cart is empty.</p>
+          <button @click="goHome" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Return to Shop</button>
+          <a href="orders.html" class="mt-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+  View Order History
+</a>
+
+        </div>
+
+      </div>
+    </transition>
+  
+
+  <!-- 🧾 Printable Invoice (hidden on screen) -->
+<div id="invoice" class="hidden print:block p-6 text-black bg-white">
+  <h1 class="text-2xl font-bold mb-4">🧾 Order Receipt</h1>
+  <p><strong>Name:</strong> {{ name }}</p>
+  <p><strong>Address:</strong> {{ address }}</p>
+  <p class="mt-4"><strong>Ordered Items:</strong></p>
+  <ul class="list-disc list-inside">
+    <li v-for="item in originalCart" :key="item.id">
+      {{ item.name }} (Qty: {{ item.quantity }}) — R{{ (item.price * item.quantity).toFixed(2) }}
+    </li>
+  </ul>
+  <p class="mt-4 font-bold">Total: R{{ invoiceTotal }}</p>
+  <p class="mt-2">Order Date: {{ new Date().toLocaleString() }}</p>
+  <p class="text-sm mt-4">Thank you for shopping with us!</p>
+</div>
   </div>
 
   <script>
-    new Vue({
-      el: "#app",
-      data: {
-        cart: JSON.parse(localStorage.getItem("cart")) || [],
-        name: "",
-        address: ""
+  new Vue({
+    el: "#app",
+    data: {
+      cart: JSON.parse(localStorage.getItem("cart")) || [],
+      originalCart: [],
+      name: "",
+      address: "",
+      orderPlaced: false,
+      pageVisible: false
+    },
+    computed: {
+  total() {
+    return this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+  },
+  invoiceTotal() {
+    return this.originalCart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+  }
+},
+    mounted() {
+      this.pageVisible = true;
+    },
+    methods: {
+      placeOrder() {
+        this.originalCart = JSON.parse(JSON.stringify(this.cart));
+        const order = {
+          name: this.name,
+          address: this.address,
+          items: [...this.cart],
+          total: this.total,
+          date: new Date().toLocaleString()
+        };
+        const orders = JSON.parse(localStorage.getItem("orders")) || [];
+        orders.push(order);
+        localStorage.setItem("orders", JSON.stringify(orders));
+        this.orderPlaced = true;
+        localStorage.removeItem("cart");
+        this.cart = [];
       },
-      computed: {
-        total() {
-          return this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
-        }
+      goHome() {
+        window.location.href = "index.html";
       },
-      methods: {
-        placeOrder() {
-          alert(`Order placed!\nName: ${this.name}\nAddress: ${this.address}\nTotal: $${this.total}`);
-          localStorage.removeItem("cart");
-          this.cart = [];
-          this.name = "";
-          this.address = "";
-        }
+      printInvoice() {
+        const originalContent = document.body.innerHTML;
+        const invoiceContent = document.getElementById("invoice").outerHTML;
+        document.body.innerHTML = invoiceContent;
+        window.print();
+        document.body.innerHTML = originalContent;
+        window.location.reload();
       }
-    });
-  </script>
+    }
+  });
+</script>
 
-  <style>
-    .input {
-      @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white;
-    }
-    .btn-primary {
-      @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
-    }
-  </style>
 </body>
 </html>

@@ -6,63 +6,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 1s ease;
+  }
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db; /* gray-300 */
+    border-radius: 0.5rem;
+    background-color: #ffffff; /* white */
+    color: #1f2937; /* gray-800 */
+  }
+
+  .dark .input {
+    background-color: #374151; /* gray-700 */
+    border-color: #4b5563; /* gray-600 */
+    color: #e5e7eb; /* gray-200 */
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: #60a5fa; /* blue-400 */
+    box-shadow: 0 0 0 1px #60a5fa;
+  }
+
+  .btn-primary {
+    background-color: #2563eb; /* blue-600 */
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: #1d4ed8; /* blue-700 */
+  }
+
+  .btn-secondary {
+    background-color: #9ca3af; /* gray-400 */
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    background-color: #6b7280; /* gray-500 */
+  }
+
+  .btn-sm {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    color: white;
+    transition: background-color 0.2s ease;
+  }
+</style>
+
+  
 </head>
 <body class="min-h-screen flex items-center justify-center py-10 px-4 relative overflow-hidden">
   <div class="absolute inset-0 bg-gradient-to-tr from-indigo-200 via-white to-purple-200 dark:from-gray-800 dark:via-gray-900 dark:to-black opacity-20 z-0"></div>
 
-  <div id="adminApp" class="relative z-10 w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
-    <h1 class="text-3xl font-bold text-center mb-4">Admin Panel - Product Management</h1>
+  <div id="adminApp" class="relative z-10 w-full max-w-4xl">
+    <transition name="fade">
+      <div v-show="pageVisible" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-center mb-4">Admin Panel - Product Management</h1>
 
-    <form @submit.prevent="saveProduct" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <input v-model="form.id" type="text" placeholder="ID" required class="input" />
-      <input v-model="form.name" type="text" placeholder="Product Name" required class="input" />
-      <input v-model.number="form.price" type="number" placeholder="Price" required class="input" />
-      <input v-model="form.image" type="text" placeholder="Image URL" required class="input" />
-      <textarea v-model="form.description" placeholder="Product Description" required class="input md:col-span-2"></textarea>
-      <div class="flex space-x-4 md:col-span-2">
-        <button type="submit" class="btn-primary w-full">{{ form.id && isEditing ? 'Update' : 'Add' }} Product</button>
-        <button type="button" v-if="isEditing" @click="cancelEdit" class="btn-secondary w-full">Cancel</button>
+        <form @submit.prevent="saveProduct" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Inside <form @submit.prevent="saveProduct"> -->
+          <input v-model="form.id" type="text" placeholder="ID" required class="input" />
+          <input v-model="form.name" type="text" placeholder="Product Name" required class="input" />
+          <input v-model.number="form.price" type="number" step="0.01" placeholder="Price (e.g. 59.99)" required class="input" />
+          <input v-model.number="form.quantity" type="number" min="0" placeholder="Quantity in Stock" required class="input" />
+          <input v-model="form.image" type="text" placeholder="Image URL" required class="input" />
+          <textarea v-model="form.description" placeholder="Product Description" required class="input md:col-span-2"></textarea>
+
+          <div class="flex space-x-4 md:col-span-2">
+            <button type="submit" class="btn-primary w-full">{{ form.id && isEditing ? 'Update' : 'Add' }} Product</button>
+            <button type="button" v-if="isEditing" @click="cancelEdit" class="btn-secondary w-full">Cancel</button>
+          </div>
+        </form>
+
+        <hr class="my-6 border-gray-300 dark:border-gray-700" />
+
+        <h2 class="text-2xl font-semibold text-center">Existing Products</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left mt-4">
+            <!-- Update table headers -->
+            <thead class="bg-gray-200 dark:bg-gray-700">
+              <tr>
+                <th class="p-2">ID</th>
+                <th class="p-2">Name</th>
+                <th class="p-2">Price</th>
+                <th class="p-2">Qty</th>
+                <th class="p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(product, index) in products" :key="product.id" class="border-b border-gray-300 dark:border-gray-700 transition duration-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <td class="p-2">{{ product.id }}</td>
+                <td class="p-2">{{ product.name }}</td>
+                <td class="p-2">R{{ Number(product.price).toFixed(2) }}</td>
+                <td class="p-2">{{ product.quantity }}</td>
+                <td class="p-2 space-x-2">
+                  <button @click="editProduct(index)" class="btn-sm bg-yellow-400 hover:bg-yellow-500">Edit</button>
+                  <button @click="deleteProduct(index)" class="btn-sm bg-red-500 hover:bg-red-600">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+
+        <div class="text-center mt-6">
+          <button @click="exportJSON" class="btn-primary">Download products.json</button>
+        </div>
       </div>
-    </form>
-
-    <hr class="my-6 border-gray-300 dark:border-gray-700" />
-
-    <h2 class="text-2xl font-semibold text-center">Existing Products</h2>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-left mt-4">
-        <thead class="bg-gray-200 dark:bg-gray-700">
-          <tr>
-            <th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Price</th><th class="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(product, index) in products" :key="product.id" class="border-b border-gray-300 dark:border-gray-700">
-            <td class="p-2">{{ product.id }}</td>
-            <td class="p-2">{{ product.name }}</td>
-            <td class="p-2">${{ product.price }}</td>
-            <td class="p-2 space-x-2">
-              <button @click="editProduct(index)" class="btn-sm bg-yellow-400 hover:bg-yellow-500">Edit</button>
-              <button @click="deleteProduct(index)" class="btn-sm bg-red-500 hover:bg-red-600">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="text-center mt-6">
-      <button @click="exportJSON" class="btn-primary">Download products.json</button>
-    </div>
+    </transition>
   </div>
 
   <script>
     new Vue({
       el: "#adminApp",
       data: {
+        pageVisible: false,
         products: [],
         form: {
           id: "",
           name: "",
           price: null,
+          quantity: 0,
           image: "",
           description: ""
         },
@@ -70,21 +151,40 @@
         editIndex: null
       },
       created() {
-        fetch("data/products.json")
-          .then(res => res.json())
-          .then(data => {
-            this.products = data;
-          });
+        const localData = localStorage.getItem("products");
+        if (localData) {
+          this.products = JSON.parse(localData);
+        } else {
+          fetch("data/products.json")
+            .then(res => res.json())
+            .then(data => {
+              this.products = data;
+              localStorage.setItem("products", JSON.stringify(data));
+            });
+        }
+      },
+      mounted() {
+        this.pageVisible = true;
       },
       methods: {
-        saveProduct() {
-          if (this.isEditing) {
-            this.products[this.editIndex] = { ...this.form };
-          } else {
-            this.products.push({ ...this.form });
-          }
-          this.resetForm();
-        },
+        // Update saveProduct method
+saveProduct() {
+  const product = {
+    ...this.form,
+    price: Number(this.form.price),
+    quantity: Number(this.form.quantity)
+  };
+
+  if (this.isEditing) {
+    this.products[this.editIndex] = product;
+  } else {
+    this.products.push(product);
+  }
+
+  this.updateLocalStorage();
+  this.resetForm();
+},
+
         editProduct(index) {
           this.form = { ...this.products[index] };
           this.isEditing = true;
@@ -93,15 +193,19 @@
         deleteProduct(index) {
           if (confirm("Delete this product?")) {
             this.products.splice(index, 1);
+            this.updateLocalStorage();
           }
         },
         cancelEdit() {
           this.resetForm();
         },
         resetForm() {
-          this.form = { id: "", name: "", price: null, image: "", description: "" };
+          this.form = { id: "", name: "", price: null, quantity: 0, image: "", description: "" };
           this.isEditing = false;
           this.editIndex = null;
+        },
+        updateLocalStorage() {
+          localStorage.setItem("products", JSON.stringify(this.products));
         },
         exportJSON() {
           const blob = new Blob([JSON.stringify(this.products, null, 2)], { type: "application/json" });
@@ -115,20 +219,5 @@
       }
     });
   </script>
-
-  <style>
-    .input {
-      @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white;
-    }
-    .btn-primary {
-      @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
-    }
-    .btn-secondary {
-      @apply bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
-    }
-    .btn-sm {
-      @apply text-sm px-3 py-1 rounded text-white transition duration-200;
-    }
-  </style>
 </body>
 </html>

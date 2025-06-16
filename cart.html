@@ -6,64 +6,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    .fade-enter-active, .fade-leave-active {
+      transition: opacity 1s ease;
+    }
+    .fade-enter, .fade-leave-to {
+      opacity: 0;
+    }
+
+    .btn-primary {
+      @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
+    }
+    .btn-sm {
+      @apply text-sm px-3 py-1 rounded text-white transition duration-200;
+    }
+  </style>
 </head>
 <body class="min-h-screen flex items-center justify-center py-10 px-4 relative overflow-hidden">
   <div class="absolute inset-0 bg-gradient-to-tr from-green-200 via-white to-blue-200 dark:from-gray-800 dark:via-gray-900 dark:to-black opacity-20 z-0"></div>
 
-  <div id="app" class="relative z-10 w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
-    <h1 class="text-3xl font-bold text-center mb-4">Shopping Cart</h1>
+  <div id="app" class="relative z-10 w-full max-w-4xl">
+    <transition name="fade">
+      <div v-show="pageVisible" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-center mb-4">Shopping Cart</h1>
 
-    <div v-if="cart.length" class="overflow-x-auto">
-      <table class="min-w-full text-left">
-        <thead class="bg-gray-200 dark:bg-gray-700">
-          <tr>
-            <th class="p-2">Item</th>
-            <th class="p-2">Price</th>
-            <th class="p-2">Qty</th>
-            <th class="p-2">Total</th>
-            <th class="p-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in cart" :key="item.id" class="border-b border-gray-300 dark:border-gray-700">
-            <td class="p-2">{{ item.name }}</td>
-            <td class="p-2">${{ item.price }}</td>
-            <td class="p-2">
-              <div class="flex items-center space-x-2">
-                <button @click="decreaseQuantity(item)" class="btn-sm bg-red-500 hover:bg-red-600">−</button>
-                <input type="number" v-model.number="item.quantity" @input="validateQuantity(item)" min="1" class="w-16 text-center rounded border dark:bg-gray-700 dark:border-gray-600" />
-                <button @click="increaseQuantity(item)" class="btn-sm bg-green-500 hover:bg-green-600">+</button>
-              </div>
-            </td>
-            <td class="p-2">${{ (item.price * item.quantity).toFixed(2) }}</td>
-            <td class="p-2">
-              <button @click="removeItem(index)" class="btn-sm bg-gray-400 hover:bg-gray-500">Remove</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="text-xl text-center mt-6 font-semibold">Total: ${{ total }}</p>
-      <div class="text-center mt-4">
-        <a href="checkout.html" class="btn-primary">Go to Checkout</a>
+        <div v-if="cart.length" class="overflow-x-auto">
+          <table class="min-w-full text-left">
+            <thead class="bg-gray-200 dark:bg-gray-700">
+              <tr>
+                <th class="p-2">Item</th>
+                <th class="p-2">Price</th>
+                <th class="p-2">Qty</th>
+                <th class="p-2">Total</th>
+                <th class="p-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in cart" :key="item.id" class="border-b border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-300">
+                <td class="p-2">{{ item.name }}</td>
+                <td class="p-2">${{ item.price }}</td>
+                <td class="p-2">
+                  <div class="flex items-center space-x-2">
+                    <button @click="decreaseQuantity(item)" class="btn-sm bg-red-500 hover:bg-red-600">−</button>
+                    <input type="number" v-model.number="item.quantity" @input="validateQuantity(item)" min="1" class="w-16 text-center rounded border dark:bg-gray-700 dark:border-gray-600" />
+                    <button @click="increaseQuantity(item)" class="btn-sm bg-green-500 hover:bg-green-600">+</button>
+                  </div>
+                </td>
+                <td class="p-2">${{ (item.price * item.quantity).toFixed(2) }}</td>
+                <td class="p-2">
+                  <button @click="removeItem(index)" class="btn-sm bg-gray-400 hover:bg-gray-500">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="text-xl text-center mt-6 font-semibold">Total: ${{ total }}</p>
+          <div class="text-center mt-4">
+            <a href="checkout.html" class="btn-primary mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Go to Checkout</a>
+          </div>
+        </div>
+
+        <div v-else class="text-center space-y-4">
+          <p class="text-lg">Your cart is empty.</p>
+          <a href="index.html" class="btn-primary">Shop Now</a>
+        </div>
       </div>
-    </div>
-
-    <div v-else class="text-center space-y-4">
-      <p class="text-lg">Your cart is empty.</p>
-      <a href="index.html" class="btn-primary">Shop Now</a>
-    </div>
+    </transition>
   </div>
 
   <script>
     new Vue({
       el: "#app",
       data: {
-        cart: JSON.parse(localStorage.getItem("cart")) || []
+        cart: JSON.parse(localStorage.getItem("cart")) || [],
+        pageVisible: false
       },
       computed: {
         total() {
           return this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
         }
+      },
+      mounted() {
+        this.pageVisible = true;
       },
       methods: {
         updateCart() {
@@ -92,14 +115,5 @@
       }
     });
   </script>
-
-  <style>
-    .btn-primary {
-      @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
-    }
-    .btn-sm {
-      @apply text-sm px-3 py-1 rounded text-white transition duration-200;
-    }
-  </style>
 </body>
 </html>

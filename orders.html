@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+<head>
+  <meta charset="UTF-8">
+  <title>Order History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <style>
+    .fade-enter-active, .fade-leave-active {
+      transition: opacity 1s ease;
+    }
+    .fade-enter, .fade-leave-to {
+      opacity: 0;
+    }
+    .btn-primary {
+      @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300;
+    }
+    html, body {
+  height: auto;
+  overflow-y: auto;
+}   
+  </style>
+</head>
+<body class="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white overflow-y-auto">
+    
+  <div class="absolute inset-0 bg-gradient-to-tr from-yellow-100 via-white to-blue-200 dark:from-gray-800 dark:via-gray-900 dark:to-black opacity-20 z-0"></div>
+
+  <div id="ordersApp" class="relative z-10 w-full max-w-3xl">
+    <transition name="fade">
+      <div v-show="pageVisible" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+        <h1 class="text-3xl font-bold text-center">Order History</h1>
+
+        <div v-if="orders.length" class="space-y-6">
+          <div v-for="(order, index) in orders" :key="index" class="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+            <p><strong>Name:</strong> {{ order.name }}</p>
+            <p><strong>Address:</strong> {{ order.address }}</p>
+            <p><strong>Date:</strong> {{ order.date }}</p>
+            <p class="font-semibold mt-2">Items:</p>
+            <ul class="list-disc list-inside">
+              <li v-for="item in order.items" :key="item.id">
+                {{ item.name }} (Qty: {{ item.quantity }}) — R{{ (item.price * item.quantity).toFixed(2) }}
+              </li>
+            </ul>
+            <p class="mt-2 font-bold">Total: R{{ order.total }}</p>
+          </div>
+        </div>
+
+        <div v-else class="text-center text-lg">
+          <p>No orders found.</p>
+        </div>
+
+        <div class="text-center mt-6">
+          <a href="index.html" class="btn-primary">Return to Shop</a>
+        </div>
+      </div>
+    </transition>
+  </div>
+
+  <script>
+    new Vue({
+      el: "#ordersApp",
+      data: {
+        orders: [],
+        pageVisible: false
+      },
+      mounted() {
+        const stored = localStorage.getItem("orders");
+        if (stored) {
+          this.orders = JSON.parse(stored);
+        }
+        this.pageVisible = true;
+      }
+    });
+  </script>
+</body>
+</html>
